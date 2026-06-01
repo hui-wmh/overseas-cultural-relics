@@ -244,35 +244,72 @@ async def get_artifacts(
     keyword: str = None,
     dynastyId: int = None,
     typeId: int = None,
-    museumId: int = None
+    museumId: int = None,
+    materialId: int = None,
+    sortBy: str = None,
+    yearStart: int = None,
+    yearEnd: int = None
 ):
-    q = "SELECT * FROM artifact WHERE 1=1"
+    q = "SELECT a.* FROM artifact a WHERE 1=1"
     params = {}
 
+    # 简单查询：名称、英文名、描述、年代、朝代、类型、材质、博物馆、收藏地
     if keyword:
         q += """
         AND (
-            titleZh LIKE :kw
-            OR title LIKE :kw
-            OR descriptionZh LIKE :kw
-            OR dynastyName LIKE :kw
-            OR typeName LIKE :kw
-            OR museumName LIKE :kw
+            a.titleZh LIKE :kw
+            OR a.title LIKE :kw
+            OR a.descriptionZh LIKE :kw
+            OR a.period LIKE :kw
+            OR a.dynastyName LIKE :kw
+            OR a.typeName LIKE :kw
+            OR a.materialName LIKE :kw
+            OR a.museumName LIKE :kw
+            OR a.location LIKE :kw
         )
         """
         params["kw"] = f"%{keyword}%"
 
+    # 多维筛选 / 高级筛选
     if dynastyId:
-        q += " AND dynastyId = :dynastyId"
+        q += " AND a.dynastyId = :dynastyId"
         params["dynastyId"] = dynastyId
 
     if typeId:
-        q += " AND typeId = :typeId"
+        q += " AND a.typeId = :typeId"
         params["typeId"] = typeId
 
     if museumId:
-        q += " AND museumId = :museumId"
+        q += " AND a.museumId = :museumId"
         params["museumId"] = museumId
+
+    if materialId:
+        q += " AND a.materialId = :materialId"
+        params["materialId"] = materialId
+
+    # 年代范围：用 dynasty 表的 startYear / endYear 做交叉判断
+    if yearStart is not None or yearEnd is not None:
+        q += """
+        AND EXISTS (
+            SELECT 1 FROM dynasty d
+            WHERE d.id = a.dynastyId
+        """
+        if yearStart is not None:
+            q += " AND d.endYear >= :yearStart"
+            params["yearStart"] = yearStart
+        if yearEnd is not None:
+            q += " AND d.startYear <= :yearEnd"
+            params["yearEnd"] = yearEnd
+        q += ")"
+
+    # 排序白名单，避免前端传任意 SQL 字段
+    sort_map = {
+        "name": "a.titleZh ASC",
+        "dynasty": "a.dynastyId ASC",
+        "date": "a.crawlDate DESC",
+        "museum": "a.museumName ASC"
+    }
+    q += " ORDER BY " + sort_map.get(sortBy, "a.id ASC")
 
     rows = await database.fetch_all(query=q, values=params)
 
@@ -283,104 +320,85 @@ async def get_artifacts(
             "id": item["id"],
             "title": item["title"],
             "titleZh": item["titleZh"],
-            "dynastyName": item["dynastyName"],
-            "typeName": item["typeName"],
-            "museumName": item["museumName"],
-            "imageUrl": item["imageUrl"]
-        })
-
-    return ok(paginate(records, page, pageSize))
-@app.get("/api/artifacts/export")
-async def export_artifacts(
-    keyword: str = None,
-    dynastyId: int = None,
-    typeId: int = None,
-    museumId: int = None
-):
-    q = "SELECT * FROM artifact WHERE 1=1"
-    params = {}
-
-    if keyword:
-        q += """
-        AND (
-            titleZh LIKE :kw
-            OR title LIKE :kw
-            OR descriptionZh LIKE :kw
-            OR dynastyName LIKE :kw
-            OR typeName LIKE :kw
-            OR museumName LIKE :kw
-        )
-        """
-        params["kw"] = f"%{keyword}%"
-
-    if dynastyId:
-        q += " AND dynastyId = :dynastyId"
-        params["dynastyId"] = dynastyId
-
-    if typeId:
-        q += " AND typeId = :typeId"
-        params["typeId"] = typeId
-
-    if museumId:
-        q += " AND museumId = :museumId"
-        params["museumId"] = museumId
-
-    rows = await database.fetch_all(query=q, values=params)
-
-    records = []
-    for row in rows:
-        item = dict(row)
-        records.append({
-            "id": item["id"],
-            "titleZh": item["titleZh"],
-            "title": item["title"],
+            "period": item["period"],
             "dynastyName": item["dynastyName"],
             "typeName": item["typeName"],
             "materialName": item["materialName"],
-            "period": item["period"],
-            "artistName": item["artistName"],
             "museumName": item["museumName"],
             "location": item["location"],
-            "dimensions": item["dimensions"],
-            "accessionNumber": item["accessionNumber"],
-            "detailUrl": item["detailUrl"]
+            "imageUrl": item["imageUrl"],
+            "crawlDate": item["crawlDate"]
         })
 
-    return ok(records)
+    return ok(paginate(records, page, pageSize))
+
 @app.get("/api/artifacts/export")
 async def export_artifacts(
     keyword: str = None,
     dynastyId: int = None,
     typeId: int = None,
-    museumId: int = None
+    museumId: int = None,
+    materialId: int = None,
+    sortBy: str = None,
+    yearStart: int = None,
+    yearEnd: int = None
 ):
-    q = "SELECT * FROM artifact WHERE 1=1"
+    q = "SELECT a.* FROM artifact a WHERE 1=1"
     params = {}
 
     if keyword:
         q += """
         AND (
-            titleZh LIKE :kw
-            OR title LIKE :kw
-            OR descriptionZh LIKE :kw
-            OR dynastyName LIKE :kw
-            OR typeName LIKE :kw
-            OR museumName LIKE :kw
+            a.titleZh LIKE :kw
+            OR a.title LIKE :kw
+            OR a.descriptionZh LIKE :kw
+            OR a.period LIKE :kw
+            OR a.dynastyName LIKE :kw
+            OR a.typeName LIKE :kw
+            OR a.materialName LIKE :kw
+            OR a.museumName LIKE :kw
+            OR a.location LIKE :kw
         )
         """
         params["kw"] = f"%{keyword}%"
 
     if dynastyId:
-        q += " AND dynastyId = :dynastyId"
+        q += " AND a.dynastyId = :dynastyId"
         params["dynastyId"] = dynastyId
 
     if typeId:
-        q += " AND typeId = :typeId"
+        q += " AND a.typeId = :typeId"
         params["typeId"] = typeId
 
     if museumId:
-        q += " AND museumId = :museumId"
+        q += " AND a.museumId = :museumId"
         params["museumId"] = museumId
+
+    if materialId:
+        q += " AND a.materialId = :materialId"
+        params["materialId"] = materialId
+
+    if yearStart is not None or yearEnd is not None:
+        q += """
+        AND EXISTS (
+            SELECT 1 FROM dynasty d
+            WHERE d.id = a.dynastyId
+        """
+        if yearStart is not None:
+            q += " AND d.endYear >= :yearStart"
+            params["yearStart"] = yearStart
+        if yearEnd is not None:
+            q += " AND d.startYear <= :yearEnd"
+            params["yearEnd"] = yearEnd
+        q += ")"
+
+    sort_map = {
+        "name": "a.titleZh ASC",
+        "dynasty": "a.dynastyId ASC",
+        "date": "a.crawlDate DESC",
+        "museum": "a.museumName ASC"
+    }
+    q += " ORDER BY " + sort_map.get(sortBy, "a.id ASC")
 
     rows = await database.fetch_all(query=q, values=params)
 
