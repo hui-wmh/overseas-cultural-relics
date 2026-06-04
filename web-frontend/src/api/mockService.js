@@ -112,7 +112,16 @@ export const searchGraph = (params) => {
 }
 
 export const getMuseumMapData = () => {
-  return request.get('/api/museums').then(ok)
+  return request.get('/api/map/museums').then(ok)
+}
+
+export const getMuseumArtifacts = (museumId, params = {}) => {
+  return request.get('/api/artifacts', {
+    params: {
+      ...params,
+      museumId
+    }
+  }).then(ok)
 }
 
 export const getDashboardStats = () => {

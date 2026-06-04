@@ -6,11 +6,17 @@
       <div style="margin-bottom:16px">
         <div style="font-size:13px;color:#666;margin-bottom:6px">用户名 *</div>
         <el-input v-model="form.username" placeholder="请输入用户名" />
+        <div v-if="!isLogin" style="font-size:12px;color:#999;margin-top:4px">
+        3-20位
+        </div>
       </div>
 
       <div style="margin-bottom:16px">
         <div style="font-size:13px;color:#666;margin-bottom:6px">密码 *</div>
         <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password />
+        <div v-if="!isLogin" style="font-size:12px;color:#999;margin-top:4px">
+        至少6位，需同时包含字母和数字
+        </div>
       </div>
 
       <template v-if="!isLogin">
@@ -80,6 +86,13 @@ const form = ref({ username: '', password: '', nickname: '', email: '', phone: '
 const submit = async () => {
   if (!form.value.username) return ElMessage.warning('请输入用户名')
   if (!form.value.password) return ElMessage.warning('请输入密码')
+  if (!form.value.username) return ElMessage.warning('请输入用户名')
+  if (form.value.username.length < 3 || form.value.username.length > 20) return ElMessage.warning('用户名长度需在3-20位之间')
+  if (!form.value.password) return ElMessage.warning('请输入密码')
+  if (form.value.password.length < 6) return ElMessage.warning('密码长度不能少于6位')
+  if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(form.value.password)) return ElMessage.warning('密码需同时包含字母和数字')
+  if (!isLogin.value && form.value.email && !/^[\w.-]+@[\w.-]+\.\w+$/.test(form.value.email)) return ElMessage.warning('邮箱格式不正确')
+  if (!isLogin.value && form.value.phone && !/^1\d{10}$/.test(form.value.phone)) return ElMessage.warning('手机号格式不正确')
   loading.value = true
   try {
     const fn = isLogin.value ? login : register

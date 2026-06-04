@@ -119,33 +119,26 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item>
-          <el-button @click="advancedVisible = !advancedVisible">
-            {{ advancedVisible ? '收起高级查询' : '高级查询' }}
-          </el-button>
-        </el-form-item>
 
-        <template v-if="advancedVisible">
-          <el-form-item label="年代范围">
-            <el-input-number
-              v-model="filter.yearStart"
-              :min="-3000"
-              :max="2026"
-              placeholder="起始年"
-              controls-position="right"
-              style="width: 130px"
-            />
-            <span class="range-separator">至</span>
-            <el-input-number
-              v-model="filter.yearEnd"
-              :min="-3000"
-              :max="2026"
-              placeholder="结束年"
-              controls-position="right"
-              style="width: 130px"
-            />
-          </el-form-item>
-        </template>
+        <el-form-item label="年代范围">
+          <el-input-number
+            v-model="filter.yearStart"
+            :min="-3000"
+            :max="2026"
+            placeholder="起始年"
+            controls-position="right"
+            style="width: 130px"
+          />
+          <span class="range-separator">至</span>
+          <el-input-number
+            v-model="filter.yearEnd"
+            :min="-3000"
+            :max="2026"
+            placeholder="结束年"
+            controls-position="right"
+            style="width: 130px"
+          />
+        </el-form-item>
 
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
@@ -363,7 +356,6 @@ const artifacts = ref([])
 const total = ref(0)
 
 const viewMode = ref('card')
-const advancedVisible = ref(false)
 
 const dynasties = ref([])
 const types = ref([])
@@ -586,6 +578,10 @@ const goDetail = (id) => {
 
 const handleImageError = (event, id) => {
   event.target.src = `https://picsum.photos/400/300?random=${id}`
+}
+
+if (route.query.keyword) {
+  filter.value.keyword = String(route.query.keyword)
 }
 
 onMounted(async () => {

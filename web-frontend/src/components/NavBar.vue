@@ -9,7 +9,6 @@
         <span @click="router.push('/timeline')">时间轴</span>
         <span @click="router.push('/map')">地图</span>
         <span @click="router.push('/dashboard')">统计看板</span>
-        <span @click="router.push('/qa')">智能问答</span>
       </div>
       <div class="nav-right">
         <span v-if="userStore.isLoggedIn" @click="router.push('/profile')">{{ userStore.userInfo.nickname }}</span>

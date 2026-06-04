@@ -9,7 +9,6 @@ const routes = [
   { path: '/timeline',      name: 'Timeline',       component: () => import('../views/TimelineView.vue') },
   { path: '/map',           name: 'Map',            component: () => import('../views/MapView.vue') },
   { path: '/dashboard',     name: 'Dashboard',      component: () => import('../views/DashboardView.vue') },
-  { path: '/qa',            name: 'QA',             component: () => import('../views/QAView.vue') },
   { path: '/login',         name: 'Login',          component: () => import('../views/LoginView.vue') },
   { path: '/profile',       name: 'Profile',        component: () => import('../views/ProfileView.vue') },
 ]

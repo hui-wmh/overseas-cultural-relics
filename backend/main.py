@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from databases import Database
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, Text
 import sqlalchemy
+import re
 from datetime import datetime
 import json
 
@@ -157,21 +158,21 @@ def init_data():
             {"id":5,"name":"Victoria and Albert Museum","nameZh":"维多利亚和阿尔伯特博物馆","country":"英国","city":"伦敦","website":"https://www.vam.ac.uk","description":"中国陶瓷与纺织品收藏极为丰富。","latitude":51.4966,"longitude":-0.1722,"artifactCount":18000},
         ])
         conn.execute(artifacts_table.insert(), [
-            {"id":1,"title":"Blue and White Porcelain Vase","titleZh":"青花云龙纹梅瓶","period":"Ming dynasty, Yongle period (1403-1424)","dynastyId":7,"dynastyName":"明代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"此梅瓶以细腻白瓷为胎，通体绘青花云龙纹，龙纹矫健有力。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=1","detailUrl":"https://www.britishmuseum.org","dimensions":"高 44.5 cm","accessionNumber":"PDF.A.1963.10","crawlDate":"2026-03-15"},
-            {"id":2,"title":"Ritual Bronze Vessel","titleZh":"商代饕餮纹铜鼎","period":"Shang dynasty (c. 1250-1046 BC)","dynastyId":1,"dynastyName":"商代","typeId":2,"typeName":"青铜器","materialId":2,"materialName":"青铜","artistId":1,"artistName":"佚名","descriptionZh":"此铜鼎为商代晚期礼器，腹部饕餮纹线条深峻，庄严厚重。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://picsum.photos/400/300?random=2","detailUrl":"https://www.metmuseum.org","dimensions":"高 57 cm","accessionNumber":"MET.24.72.1","crawlDate":"2026-03-20"},
-            {"id":3,"title":"Landscape Painting","titleZh":"仿古山水图轴","period":"Ming dynasty, 16th century","dynastyId":7,"dynastyName":"明代","typeId":3,"typeName":"书画","materialId":4,"materialName":"绢本","artistId":4,"artistName":"唐寅","descriptionZh":"此画为唐寅晚年力作，远山近水，林木苍郁。","museumId":3,"museumName":"卢浮宫博物馆","location":"法国巴黎","imageUrl":"https://picsum.photos/400/300?random=3","detailUrl":"https://www.louvre.fr","dimensions":"纵 122.5 cm","accessionNumber":"LOUVRE.OA.7234","crawlDate":"2026-03-18"},
-            {"id":4,"title":"Jade Bi Disk","titleZh":"战国玉璧","period":"Warring States period (475-221 BC)","dynastyId":2,"dynastyName":"周代","typeId":4,"typeName":"玉器","materialId":3,"materialName":"玉","artistId":1,"artistName":"佚名","descriptionZh":"此玉璧以和田青玉雕琢而成，表面饰谷纹，色泽温润如脂。","museumId":4,"museumName":"弗利尔艺术画廊","location":"美国华盛顿","imageUrl":"https://picsum.photos/400/300?random=4","detailUrl":"https://asia.si.edu","dimensions":"直径 28.4 cm","accessionNumber":"FSG.F1916.345","crawlDate":"2026-03-22"},
-            {"id":5,"title":"Tang Sancai Horse","titleZh":"唐三彩马","period":"Tang dynasty (618-907)","dynastyId":4,"dynastyName":"唐代","typeId":6,"typeName":"雕塑","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"唐三彩马以低温铅釉施以黄、绿、白三色，神态威武。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=5","detailUrl":"https://www.britishmuseum.org","dimensions":"高 73 cm","accessionNumber":"BM.1936.10.12.233","crawlDate":"2026-03-15"},
-            {"id":6,"title":"Ru Ware Brush Washer","titleZh":"汝窑天青釉洗","period":"Song dynasty (960-1127)","dynastyId":5,"dynastyName":"宋代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"汝窑为宋代五大名窑之首，天青色釉面莹润，满布细碎开片。","museumId":5,"museumName":"维多利亚和阿尔伯特博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=6","detailUrl":"https://www.vam.ac.uk","dimensions":"直径 13.5 cm","accessionNumber":"VAM.C.1936.67","crawlDate":"2026-03-25"},
-            {"id":7,"title":"Qingming Festival Scroll","titleZh":"清明上河图（摹本）","period":"Song dynasty (960-1279)","dynastyId":5,"dynastyName":"宋代","typeId":3,"typeName":"书画","materialId":5,"materialName":"纸本","artistId":3,"artistName":"张择端","descriptionZh":"清明上河图描绘了北宋汴京清明节前后的繁荣景象。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://picsum.photos/400/300?random=7","detailUrl":"https://www.metmuseum.org","dimensions":"纵 25.5 cm","accessionNumber":"MET.1981.276","crawlDate":"2026-03-20"},
-            {"id":8,"title":"Famille Rose Bowl","titleZh":"清粉彩花卉纹碗","period":"Qing dynasty, Yongzheng (1723-1735)","dynastyId":8,"dynastyName":"清代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"雍正粉彩色调柔和，此碗内外满绘折枝花卉。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=8","detailUrl":"https://www.britishmuseum.org","dimensions":"口径 20.2 cm","accessionNumber":"BM.PDF.Y.1978.12","crawlDate":"2026-03-15"},
-            {"id":9,"title":"Han Bronze Mirror","titleZh":"汉代鎏金铜镜","period":"Han dynasty (206 BC-AD 220)","dynastyId":3,"dynastyName":"汉代","typeId":2,"typeName":"青铜器","materialId":2,"materialName":"青铜","artistId":1,"artistName":"佚名","descriptionZh":"此铜镜背面鎏金，饰以四神纹，象征四方守护。","museumId":4,"museumName":"弗利尔艺术画廊","location":"美国华盛顿","imageUrl":"https://picsum.photos/400/300?random=9","detailUrl":"https://asia.si.edu","dimensions":"直径 23.4 cm","accessionNumber":"FSG.F1909.199","crawlDate":"2026-03-22"},
-            {"id":10,"title":"Silk Embroidery Panel","titleZh":"清代龙袍刺绣面料","period":"Qing dynasty (1644-1912)","dynastyId":8,"dynastyName":"清代","typeId":5,"typeName":"织物","materialId":4,"materialName":"绢本","artistId":1,"artistName":"佚名","descriptionZh":"此刺绣面料为清代皇室龙袍局部，以金线绣就九龙腾云图案。","museumId":5,"museumName":"维多利亚和阿尔伯特博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=10","detailUrl":"https://www.vam.ac.uk","dimensions":"纵 142 cm","accessionNumber":"VAM.T.1896.23","crawlDate":"2026-03-25"},
-            {"id":11,"title":"Guan Ware Vase","titleZh":"官窑粉青釉弦纹瓶","period":"Song dynasty, Southern Song (1127-1279)","dynastyId":5,"dynastyName":"宋代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"南宋官窑以厚釉著称，粉青釉面布满大小开片。","museumId":3,"museumName":"卢浮宫博物馆","location":"法国巴黎","imageUrl":"https://picsum.photos/400/300?random=11","detailUrl":"https://www.louvre.fr","dimensions":"高 33.6 cm","accessionNumber":"LOUVRE.G.1955.11","crawlDate":"2026-03-18"},
-            {"id":12,"title":"Jade Burial Suit","titleZh":"西汉金缕玉衣（局部）","period":"Han dynasty, Western Han (206 BC-AD 9)","dynastyId":3,"dynastyName":"汉代","typeId":4,"typeName":"玉器","materialId":3,"materialName":"玉","artistId":1,"artistName":"佚名","descriptionZh":"金缕玉衣是汉代皇室贵族的葬服，以金丝连缀玉片而成。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://picsum.photos/400/300?random=12","detailUrl":"https://www.metmuseum.org","dimensions":"纵 47 cm","accessionNumber":"MET.2009.322","crawlDate":"2026-03-20"},
-            {"id":13,"title":"Longquan Celadon Ewer","titleZh":"龙泉窑青瓷凤耳瓶","period":"Yuan dynasty (1271-1368)","dynastyId":6,"dynastyName":"元代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"龙泉窑青瓷以梅子青釉著称，釉色深沉如翡翠。","museumId":5,"museumName":"维多利亚和阿尔伯特博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=13","detailUrl":"https://www.vam.ac.uk","dimensions":"高 38.2 cm","accessionNumber":"VAM.C.1927.44","crawlDate":"2026-03-25"},
-            {"id":14,"title":"Oracle Bone Fragment","titleZh":"商代甲骨文残片","period":"Shang dynasty (c. 1300-1046 BC)","dynastyId":1,"dynastyName":"商代","typeId":2,"typeName":"青铜器","materialId":2,"materialName":"青铜","artistId":1,"artistName":"佚名","descriptionZh":"甲骨文是中国已知最早的成熟文字，用于占卜祭祀。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://picsum.photos/400/300?random=14","detailUrl":"https://www.britishmuseum.org","dimensions":"纵 15 cm","accessionNumber":"BM.OA.1903.4.8.3","crawlDate":"2026-03-15"},
-            {"id":15,"title":"Doucai Chicken Cup","titleZh":"成化斗彩鸡缸杯","period":"Ming dynasty, Chenghua (1465-1487)","dynastyId":7,"dynastyName":"明代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"成化斗彩鸡缸杯是中国最名贵的瓷器之一。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://picsum.photos/400/300?random=15","detailUrl":"https://www.metmuseum.org","dimensions":"口径 8.3 cm","accessionNumber":"MET.1993.87.1","crawlDate":"2026-03-20"},
+            {"id":1,"title":"Blue and White Porcelain Vase","titleZh":"青花云龙纹梅瓶","period":"Ming dynasty, Yongle period (1403-1424)","dynastyId":7,"dynastyName":"明代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"此梅瓶以细腻白瓷为胎，通体绘青花云龙纹，龙纹矫健有力。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://media.britishmuseum.org/media/Repository/Documents/2014_10/3_20/3d9c800b_8247_4fa9_9084_a3b9014a671c/mid_00222842_001.jpg","detailUrl":"https://www.britishmuseum.org","dimensions":"高 44.5 cm","accessionNumber":"PDF.A.1963.10","crawlDate":"2026-03-15"},
+            {"id":2,"title":"Ritual Bronze Vessel","titleZh":"商代饕餮纹铜鼎","period":"Shang dynasty (c. 1250-1046 BC)","dynastyId":1,"dynastyName":"商代","typeId":2,"typeName":"青铜器","materialId":2,"materialName":"青铜","artistId":1,"artistName":"佚名","descriptionZh":"此铜鼎为商代晚期礼器，腹部饕餮纹线条深峻，庄严厚重。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://file.moc.gov.tw/001/Upload/OldFiles/AdminUploads/images/large/636e44fd-5495-42e6-8646-5795e6b84bf4.jpg","detailUrl":"https://www.metmuseum.org","dimensions":"高 57 cm","accessionNumber":"MET.24.72.1","crawlDate":"2026-03-20"},
+            {"id":3,"title":"Landscape Painting","titleZh":"仿古山水图轴","period":"Ming dynasty, 16th century","dynastyId":7,"dynastyName":"明代","typeId":3,"typeName":"书画","materialId":4,"materialName":"绢本","artistId":4,"artistName":"唐寅","descriptionZh":"此画为唐寅晚年力作，远山近水，林木苍郁。","museumId":3,"museumName":"卢浮宫博物馆","location":"法国巴黎","imageUrl":"https://upload.wikimedia.org/wikipedia/commons/b/bc/%E7%8E%8B%E9%89%B4%E4%BB%BF%E5%A4%A7%E7%97%B4%E5%B1%B1%E6%B0%B4%E5%9B%BE%E8%BD%B4.jpg","detailUrl":"https://www.louvre.fr","dimensions":"纵 122.5 cm","accessionNumber":"LOUVRE.OA.7234","crawlDate":"2026-03-18"},
+            {"id":4,"title":"Jade Bi Disk","titleZh":"战国玉璧","period":"Warring States period (475-221 BC)","dynastyId":2,"dynastyName":"周代","typeId":4,"typeName":"玉器","materialId":3,"materialName":"玉","artistId":1,"artistName":"佚名","descriptionZh":"此玉璧以和田青玉雕琢而成，表面饰谷纹，色泽温润如脂。","museumId":4,"museumName":"弗利尔艺术画廊","location":"美国华盛顿","imageUrl":"https://digitalarchive.npm.gov.tw/Image/GetImage?imageId=110546&randomCode=21056959185","detailUrl":"https://asia.si.edu","dimensions":"直径 28.4 cm","accessionNumber":"FSG.F1916.345","crawlDate":"2026-03-22"},
+            {"id":5,"title":"Tang Sancai Horse","titleZh":"唐三彩马","period":"Tang dynasty (618-907)","dynastyId":4,"dynastyName":"唐代","typeId":6,"typeName":"雕塑","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"唐三彩马以低温铅釉施以黄、绿、白三色，神态威武。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://th.bing.com/th/id/R.dffa8f1bb2f7abd8af7554bd136a0b20?rik=aUrkO8%2f0nbg26Q&riu=http%3a%2f%2fn.sinaimg.cn%2fsinakd20240514ac%2f734%2fw1967h1967%2f20240514%2f5636-639be5e6d8367efd2b4b18389324bd5c.jpg&ehk=iFv5Ui3Q6DfsgRCfJsgA%2f6Qis6bhwxpu8p0v908hE%2fg%3d&risl=&pid=ImgRaw&r=0","detailUrl":"https://www.britishmuseum.org","dimensions":"高 73 cm","accessionNumber":"BM.1936.10.12.233","crawlDate":"2026-03-15"},
+            {"id":6,"title":"Ru Ware Brush Washer","titleZh":"汝窑天青釉洗","period":"Song dynasty (960-1127)","dynastyId":5,"dynastyName":"宋代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"汝窑为宋代五大名窑之首，天青色釉面莹润，满布细碎开片。","museumId":5,"museumName":"维多利亚和阿尔伯特博物馆","location":"英国伦敦","imageUrl":"https://www.dpm.org.cn/Uploads/Picture/dc/16893[1024].jpg","detailUrl":"https://www.vam.ac.uk","dimensions":"直径 13.5 cm","accessionNumber":"VAM.C.1936.67","crawlDate":"2026-03-25"},
+            {"id":7,"title":"Qingming Festival Scroll","titleZh":"清明上河图（摹本）","period":"Song dynasty (960-1279)","dynastyId":5,"dynastyName":"宋代","typeId":3,"typeName":"书画","materialId":5,"materialName":"纸本","artistId":3,"artistName":"张择端","descriptionZh":"清明上河图描绘了北宋汴京清明节前后的繁荣景象。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://img.alicdn.com/i4/851971635/O1CN01PqZdpn1Nws4xVXZVh_!!851971635.jpg","detailUrl":"https://www.metmuseum.org","dimensions":"纵 25.5 cm","accessionNumber":"MET.1981.276","crawlDate":"2026-03-20"},
+            {"id":8,"title":"Famille Rose Bowl","titleZh":"清粉彩花卉纹碗","period":"Qing dynasty, Yongzheng (1723-1735)","dynastyId":8,"dynastyName":"清代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"雍正粉彩色调柔和，此碗内外满绘折枝花卉。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://p1.liveauctioneers.com/7578/299660/159658769_1_x.jpg?quality=70&version=1692613638","detailUrl":"https://www.britishmuseum.org","dimensions":"口径 20.2 cm","accessionNumber":"BM.PDF.Y.1978.12","crawlDate":"2026-03-15"},
+            {"id":9,"title":"Han Bronze Mirror","titleZh":"汉代鎏金铜镜","period":"Han dynasty (206 BC-AD 220)","dynastyId":3,"dynastyName":"汉代","typeId":2,"typeName":"青铜器","materialId":2,"materialName":"青铜","artistId":1,"artistName":"佚名","descriptionZh":"此铜镜背面鎏金，饰以四神纹，象征四方守护。","museumId":4,"museumName":"弗利尔艺术画廊","location":"美国华盛顿","imageUrl":"https://img1.artron.net/auction/2010/art9254/d/art92542196.jpg","detailUrl":"https://asia.si.edu","dimensions":"直径 23.4 cm","accessionNumber":"FSG.F1909.199","crawlDate":"2026-03-22"},
+            {"id":10,"title":"Silk Embroidery Panel","titleZh":"清代龙袍刺绣面料","period":"Qing dynasty (1644-1912)","dynastyId":8,"dynastyName":"清代","typeId":5,"typeName":"织物","materialId":4,"materialName":"绢本","artistId":1,"artistName":"佚名","descriptionZh":"此刺绣面料为清代皇室龙袍局部，以金线绣就九龙腾云图案。","museumId":5,"museumName":"维多利亚和阿尔伯特博物馆","location":"英国伦敦","imageUrl":"https://image.invaluable.com/housePhotos/fukuoka/01/760301/H22958-L356621900.jpg","detailUrl":"https://www.vam.ac.uk","dimensions":"纵 142 cm","accessionNumber":"VAM.T.1896.23","crawlDate":"2026-03-25"},
+            {"id":11,"title":"Guan Ware Vase","titleZh":"官窑粉青釉弦纹瓶","period":"Song dynasty, Southern Song (1127-1279)","dynastyId":5,"dynastyName":"宋代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"南宋官窑以厚釉著称，粉青釉面布满大小开片。","museumId":3,"museumName":"卢浮宫博物馆","location":"法国巴黎","imageUrl":"https://k.sinaimg.cn/n/sinakd20200622ac/555/w784h1371/20200622/39d0-ivffpct5061619.jpg/w700d1q75cms.jpg?by=cms_fixed_width","detailUrl":"https://www.louvre.fr","dimensions":"高 33.6 cm","accessionNumber":"LOUVRE.G.1955.11","crawlDate":"2026-03-18"},
+            {"id":12,"title":"Jade Burial Suit","titleZh":"西汉金缕玉衣（局部）","period":"Han dynasty, Western Han (206 BC-AD 9)","dynastyId":3,"dynastyName":"汉代","typeId":4,"typeName":"玉器","materialId":3,"materialName":"玉","artistId":1,"artistName":"佚名","descriptionZh":"金缕玉衣是汉代皇室贵族的葬服，以金丝连缀玉片而成。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://www.heritagedaily.com/wp-content/uploads/2022/03/shutterstock-608432234-696x464.jpg","detailUrl":"https://www.metmuseum.org","dimensions":"纵 47 cm","accessionNumber":"MET.2009.322","crawlDate":"2026-03-20"},
+            {"id":13,"title":"Longquan Celadon Ewer","titleZh":"龙泉窑青瓷凤耳瓶","period":"Yuan dynasty (1271-1368)","dynastyId":6,"dynastyName":"元代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"龙泉窑青瓷以梅子青釉著称，釉色深沉如翡翠。","museumId":5,"museumName":"维多利亚和阿尔伯特博物馆","location":"英国伦敦","imageUrl":"https://assets.isu.pub/document-structure/230720081324-e7e636dd426766d3a2acfd909629b7ce/v1/297a074f28eb4782565f3c60e7aa19ca.jpeg","detailUrl":"https://www.vam.ac.uk","dimensions":"高 38.2 cm","accessionNumber":"VAM.C.1927.44","crawlDate":"2026-03-25"},
+            {"id":14,"title":"Oracle Bone Fragment","titleZh":"商代甲骨文残片","period":"Shang dynasty (c. 1300-1046 BC)","dynastyId":1,"dynastyName":"商代","typeId":2,"typeName":"青铜器","materialId":2,"materialName":"青铜","artistId":1,"artistName":"佚名","descriptionZh":"甲骨文是中国已知最早的成熟文字，用于占卜祭祀。","museumId":1,"museumName":"大英博物馆","location":"英国伦敦","imageUrl":"https://zdimg.lifeweek.com.cn/bg/20181008/1538965366087rwran.jpg","detailUrl":"https://www.britishmuseum.org","dimensions":"纵 15 cm","accessionNumber":"BM.OA.1903.4.8.3","crawlDate":"2026-03-15"},
+            {"id":15,"title":"Doucai Chicken Cup","titleZh":"成化斗彩鸡缸杯","period":"Ming dynasty, Chenghua (1465-1487)","dynastyId":7,"dynastyName":"明代","typeId":1,"typeName":"瓷器","materialId":1,"materialName":"陶瓷","artistId":1,"artistName":"佚名","descriptionZh":"成化斗彩鸡缸杯是中国最名贵的瓷器之一。","museumId":2,"museumName":"大都会艺术博物馆","location":"美国纽约","imageUrl":"https://img1.artron.net/auction/2014/art505726/d/art5057260129.jpg","detailUrl":"https://www.metmuseum.org","dimensions":"口径 8.3 cm","accessionNumber":"MET.1993.87.1","crawlDate":"2026-03-20"},
         ])
         conn.execute(comments_table.insert(), [
             {"artifactId":1,"userId":1,"nickname":"文物爱好者","content":"这件青花梅瓶造型优美，是明永乐官窑的代表作！","auditStatus":"approved","auditRemark":"","createdAt":"2026-04-10 14:23:00"},
@@ -580,6 +581,14 @@ async def register(body: dict):
     username = body.get("username")
     password = body.get("password")
     existing = await database.fetch_one("SELECT id FROM user WHERE username = :username", {"username": username})
+    if not username or not password:
+        return {"code": 400, "message": "用户名和密码不能为空", "data": None}
+    if len(username) < 3 or len(username) > 20:
+        return {"code": 400, "message": "用户名长度需在3-20位之间", "data": None}
+    if len(password) < 6:
+        return {"code": 400, "message": "密码长度不能少于6位", "data": None}
+    if not re.search(r'[a-zA-Z]', password) or not re.search(r'\d', password):
+        return {"code": 400, "message": "密码需同时包含字母和数字", "data": None}
     if existing:
         return {"code": 400, "message": "用户名已存在", "data": None}
     import time
@@ -1185,57 +1194,47 @@ async def import_graph(data: dict):
     }
 
 # ========== 新增：文物地理分布图接口 ==========
-@app.get("/api/museums")
-async def get_museums():
+@app.get("/api/map/museums")
+async def get_museum_map_data():
     """
     获取所有海外博物馆的列表及其坐标和藏品数量
-    符合统一规范：GET /api/museums
+    地图页专用：GET /api/map/museums
     """
     try:
-        # 1. 查询博物馆基础信息（从数据库全表的 museum 表结构衍生）
-        # 如果你的 SQLite 中没有单独的 museum 表，可从 artifact 表中动态聚合，但为了符合规范，推荐从 museum 表查
-        # 这里采用健壮的查询，若无单独表则从 artifact 表提取基础数据
-        museums_query = """
-            SELECT DISTINCT 
-                museumId AS id, 
-                museumName AS name,
-                museumName AS name_zh, -- 示例中若无中文名，暂用原名替代
-                location
-            FROM artifact 
-            WHERE museumId IS NOT NULL
-        """
-        rows = await database.fetch_all(museums_query)
-        
-        # 2. 统计每个博物馆的文物数量
-        count_query = "SELECT museumId, COUNT(*) as c FROM artifact GROUP BY museumId"
-        counts = await database.fetch_all(count_query)
-        count_map = {r["museumId"]: r["c"] for r in counts}
+        rows = await database.fetch_all(
+            """
+            SELECT
+                m.id,
+                m.name,
+                m.nameZh,
+                m.country,
+                m.city,
+                m.website,
+                m.description,
+                m.latitude,
+                m.longitude,
+                m.artifactCount AS estimatedArtifactCount,
+                COUNT(a.id) AS artifactCount
+            FROM museum m
+            LEFT JOIN artifact a ON a.museumId = m.id
+            WHERE m.latitude IS NOT NULL
+              AND m.longitude IS NOT NULL
+            GROUP BY
+                m.id,
+                m.name,
+                m.nameZh,
+                m.country,
+                m.city,
+                m.website,
+                m.description,
+                m.latitude,
+                m.longitude,
+                m.artifactCount
+            ORDER BY artifactCount DESC, m.id ASC
+            """
+        )
 
-        # 3. 模拟/匹配经纬度（因为现有的 artifact 表只有文本 location，实际项目中应当读取 museum 表的经纬度）
-        # 这里给出一套预设的国际著名博物馆坐标字典，防止因数据库缺失经纬度导致地图无法渲染
-        geo_mock = {
-            1: {"lat": 41.5008, "lng": -81.6116, "country": "美国", "city": "克利夫兰"}, # 克利夫兰
-            2: {"lat": 40.7794, "lng": -73.9632, "country": "美国", "city": "纽约"},     # 大都会
-            3: {"lat": 38.8888, "lng": -77.0260, "country": "美国", "city": "华盛顿"},   # 史密斯
-        }
-
-        result = []
-        for row in rows:
-            m_id = row["id"]
-            geo = geo_mock.get(m_id, {"lat": 40.0, "lng": -100.0, "country": "海外", "city": "未知"})
-            
-            result.append({
-                "id": m_id,
-                "name": row["name"],
-                "nameZh": row["name_zh"],
-                "country": geo["country"],
-                "city": geo["city"],
-                "latitude": geo["lat"],
-                "longitude": geo["lng"],
-                "artifactCount": count_map.get(m_id, 0)
-            })
-
-        return {"code": 200, "message": "success", "data": result}
+        return ok([dict(r) for r in rows])
     except Exception as e:
         return {"code": 500, "message": f"服务器内部错误: {str(e)}", "data": []}
 
